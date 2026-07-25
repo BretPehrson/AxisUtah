@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AxisUtah.Api/AxisUtah.Api.csproj" />
+  <Project Path="AxisUtah.Tests/AxisUtah.Tests.csproj" />
+</Solution>
