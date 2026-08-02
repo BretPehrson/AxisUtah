@@ -1,0 +1,98 @@
+/* Protected Route Styling */
+
+:root {
+  --axis-gold: #d4af37;
+  --axis-dark: #1a1a2e;
+  --axis-darker: #0f0f1e;
+  --axis-text-light: #e8e8e8;
+  --axis-text-muted: #a0a0a0;
+  --axis-border: #3a3a4e;
+  --warning-color: #f59e0b;
+}
+
+.protected-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--axis-darker) 0%, var(--axis-dark) 100%);
+  padding: 1rem;
+}
+
+.protected-card {
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #242b3f 100%);
+  border: 1px solid var(--axis-border);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.protected-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.1);
+  border: 2px solid var(--warning-color);
+  border-radius: 50%;
+  color: var(--warning-color);
+  flex-shrink: 0;
+}
+
+.protected-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.protected-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--axis-text-light);
+  margin: 0 0 1rem;
+}
+
+.protected-message {
+  font-size: 0.9375rem;
+  color: var(--axis-text-muted);
+  margin: 0 0 2rem;
+  line-height: 1.6;
+}
+
+.protected-button {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, var(--axis-gold) 0%, #e5c158 100%);
+  color: var(--axis-dark);
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  text-transform: uppercase;
+}
+
+.protected-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.protected-button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .protected-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .protected-title {
+    font-size: 1.25rem;
+  }
+}

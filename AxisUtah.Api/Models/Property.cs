@@ -79,5 +79,8 @@ public class Lead
     public string? Message { get; set; }
 
     public int? PropertyListingKey { get; set; } // Nullable if general inquiry
+    [ForeignKey(nameof(PropertyListingKey))]
+    public Property? Property { get; set; }
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
