@@ -15,6 +15,16 @@ publish/
 dist/
 dist-ssr/
 TestResults/
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/dist/
+**/dist-ssr/
+**/TestResults/
+
+# Visual Studio workspace metadata
+.vs/
 
 # Node / frontend dependencies
 node_modules/
