@@ -31,7 +31,7 @@ public static class PropertyMappingsExtensions
                 ListingKey = dto.ListingKey,
                 MediaUrl = m.MediaURL,
                 Order = m.Order ?? index
-            }).ToList() ?? new()
+            }).ToList() ?? []
         };
     }
 
@@ -65,6 +65,6 @@ public static class PropertyMappingsExtensions
             ListingKey = dto.ListingKey,
             MediaUrl = m.MediaURL,
             Order = m.Order ?? index
-        }).ToList() ?? new();
+        }).ToList() ?? [];
     }
 }

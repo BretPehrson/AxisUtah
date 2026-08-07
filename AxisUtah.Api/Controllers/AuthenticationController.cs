@@ -2,10 +2,14 @@ namespace AxisUtah.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IOptions<JwtOption> jwtOptions) : ControllerBase
+public class AuthController(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    IOptions<JwtOption> jwtOptions,
+    IWebHostEnvironment environment) : ControllerBase
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
     private readonly JwtOption _jwtOptions = jwtOptions.Value;
+    private readonly IWebHostEnvironment _environment = environment;
 
     [AllowAnonymous]
     [HttpPost("register")]
@@ -29,7 +33,26 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        return Ok(new { message = "Registration successful." });
+        // Generate token and refresh token immediately
+        var refreshToken = new RefreshToken
+        {
+            Token = GenerateSecureRefreshToken(),
+            Expires = DateTime.UtcNow.AddDays(7),
+            UserId = user.UserId
+        };
+
+        context.RefreshTokens.Add(refreshToken);
+        await context.SaveChangesAsync();
+
+        SetRefreshTokenCookie(refreshToken.Token);
+
+        return Ok(new
+        {
+            message = "Registration successful.",
+            token = new JwtSecurityTokenHandler().WriteToken(GenerateJwtToken(user)),
+            Token_type = "Bearer",
+            expires_utc = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes)
+        });
     }
 
     [AllowAnonymous]
@@ -50,29 +73,6 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
         if (!isPasswordValid) return Unauthorized(new { message = "Invalid username or password." });
 
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        var signingKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtOptions.Key));
-        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
-
-        var expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes);
-
-        var token = new JwtSecurityToken(
-            issuer: _jwtOptions.Issuer,
-            audience: _jwtOptions.Audience,
-            claims: claims,
-            expires: expires,
-            signingCredentials: credentials
-        );
-        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
         var newRefreshToken = new RefreshToken
         {
             Token = GenerateSecureRefreshToken(),
@@ -87,9 +87,9 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
 
         return Ok(new 
         {
-             token = tokenString,
+             token = new JwtSecurityTokenHandler().WriteToken(GenerateJwtToken(user)),
              Token_type = "Bearer",
-             expires_utc = expires
+             expires_utc = GetExpiresUtc()
         });
     }
 
@@ -109,29 +109,7 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
 
         if (storedToken == null || storedToken.User == null || !storedToken.IsActive)
             return Unauthorized(new { message = "Invalid or expired refresh token." });
-
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, storedToken.User.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Sub, storedToken.User.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, storedToken.User.Email),
-            new Claim(ClaimTypes.Email, storedToken.User.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        var signingKey = new SymmetricSecurityKey(Convert.FromHexString(_jwtOptions.Key));
-        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes);
-
-        var token = new JwtSecurityToken(
-            issuer: _jwtOptions.Issuer,
-            audience: _jwtOptions.Audience,
-            claims: claims,
-            expires: expires,
-            signingCredentials: credentials
-        );
-        var newTokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
+        
         var newRefreshToken = new RefreshToken
         {
             Token = GenerateSecureRefreshToken(),
@@ -144,11 +122,11 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
 
         SetRefreshTokenCookie(newRefreshToken.Token);
         
-        return Ok(new 
+        return Ok(new
         {
-            token = newTokenString,
+            token = new JwtSecurityTokenHandler().WriteToken(GenerateJwtToken(storedToken.User)),
             Token_type = "Bearer",
-            expires_utc = expires
+            expires_utc = GetExpiresUtc()
         });
     }
 
@@ -172,11 +150,39 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
         Response.Cookies.Delete("refreshToken", new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = !_environment.IsDevelopment(),
             SameSite = SameSiteMode.Strict
         });
 
         return Ok(new { message = "Logged out successfully." });
+    }
+
+    private JwtSecurityToken GenerateJwtToken(User user)
+    {
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var signingKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtOptions.Key));
+        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
+        return new JwtSecurityToken(
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
+            claims: claims,
+            expires: GetExpiresUtc(),
+            signingCredentials: credentials
+        );
+    }
+
+    private DateTime GetExpiresUtc()
+    {
+        return DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes);
     }
 
     private static string GenerateSecureRefreshToken()
@@ -192,8 +198,8 @@ public class AuthController(IDbContextFactory<AppDbContext> dbContextFactory, IO
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = !_environment.IsDevelopment(),
+            SameSite = !_environment.IsDevelopment() ? SameSiteMode.Strict : SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddDays(7)
         };
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
