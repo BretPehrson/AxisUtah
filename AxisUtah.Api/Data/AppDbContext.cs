@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<UserInfo> UserInfos => Set<UserInfo>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PropertyHistory> PropertyHistories => Set<PropertyHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +33,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Brokerage>()
             .HasQueryFilter(b => b.IsActive);
+
+        modelBuilder.Entity<Property>()
+            .HasQueryFilter(p => p.IsActive);
+
+        modelBuilder.Entity<PropertyMedia>()
+            .HasQueryFilter(pm => pm.Property != null && pm.Property.IsActive);
+        
+        modelBuilder.Entity<PropertyHistory>()
+            .HasQueryFilter(ph => ph.Property != null && ph.Property.IsActive);
 
         // ====================
         // UNIQUE CONSTRAINTS
@@ -92,7 +102,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne(m => m.Property)
             .WithMany(p => p.Media)
             .HasForeignKey(m => m.ListingKey)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Agent -> Brokerage
         modelBuilder.Entity<Agent>()
@@ -107,6 +117,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(l => l.PropertyListingKey)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // PropertyHistory -> Property
+        modelBuilder.Entity<PropertyHistory>()
+            .HasOne(ph => ph.Property)
+            .WithMany()
+            .HasForeignKey(ph => ph.ListingKey)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ====================
         // INDEXES - PROPERTY
@@ -126,6 +143,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Property>()
             .HasIndex(p => p.ListingKey);
+
+        // ====================
+        // INDEXES - PROPERTY HISTORY
+        // ====================
+        modelBuilder.Entity<PropertyHistory>()
+            .HasIndex(ph => ph.ListingKey);
+
+        modelBuilder.Entity<PropertyHistory>()
+            .HasIndex(ph => ph.ChangedAtUtc)
+            .IsDescending();
+
+        modelBuilder.Entity<PropertyHistory>()
+            .HasIndex(ph => new { ph.ListingKey, ph.ChangedAtUtc })
+            .IsDescending(false, true);
+
+        modelBuilder.Entity<PropertyHistory>()
+            .HasIndex(ph => ph.CorrelationId);
 
         // ====================
         // INDEXES - PROPERTY MEDIA

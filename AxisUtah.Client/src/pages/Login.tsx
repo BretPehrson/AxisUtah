@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api/client'
 import { ErrorMessage } from '../components/ErrorMessages'
@@ -12,7 +13,7 @@ export default function Login() {
   const [showRegister, setShowRegister] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
 
@@ -35,7 +36,7 @@ export default function Login() {
     }
   }
 
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
 

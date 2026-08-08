@@ -5,27 +5,17 @@ public class Property
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public int ListingKey { get; set; }
-
     public string? ListingId { get; set; }
-
     [Column(TypeName = "decimal(18, 2)")]
     public decimal? ListPrice { get; set; }
-
-    public int? BedroomsTotal { get; set; }
-    
+    public int? BedroomsTotal { get; set; }    
     [Column(TypeName = "decimal(4,1)")]
     public decimal? BathroomsTotal { get; set; }
-
     public int? BuildingAreaTotal { get; set; }
-
     public string? StandardStatus { get; set; } = "Active";
-
     public string? PropertyType { get; set; }
-
     public string? StructureType { get; set; }
-
     public string? PublicRemarks { get; set; }
-
     public string? UnparsedAddress { get; set; }
     public string? City { get; set; }
     public string? StateOrProvince { get; set; } = "UT";
@@ -35,6 +25,7 @@ public class Property
     public string? ListAgentFullName { get; set; }
     public string? ListOfficeName { get; set; }
     public bool IsBrokerageListing { get; set; }
+    public bool IsActive { get; set; }
 
     [ForeignKey(nameof(Address))]
     public int? AddressId { get; set; }
