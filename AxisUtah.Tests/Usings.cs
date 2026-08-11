@@ -1,0 +1,20 @@
+global using Xunit;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.AspNetCore.Mvc;
+global using System.Collections.Generic;
+global using System.Security.Claims;
+global using System.IdentityModel.Tokens.Jwt;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Options;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.EntityFrameworkCore.Infrastructure;
+global using Microsoft.Extensions.FileProviders;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.AspNetCore.Routing;
+
+// Project-specific usings
+global using AxisUtah.Api.Data;
+global using AxisUtah.Api.Controllers;
+global using AxisUtah.Api.Models;
+global using AxisUtah.Tests.Data;

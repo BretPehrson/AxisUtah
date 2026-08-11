@@ -38,10 +38,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasQueryFilter(p => p.IsActive);
 
         modelBuilder.Entity<PropertyMedia>()
-            .HasQueryFilter(pm => pm.Property != null && pm.Property.IsActive);
+            .HasQueryFilter(pm => pm.Property!.IsActive);
         
         modelBuilder.Entity<PropertyHistory>()
-            .HasQueryFilter(ph => ph.Property != null && ph.Property.IsActive);
+            .HasQueryFilter(ph => ph.Property!.IsActive);
 
         // ====================
         // UNIQUE CONSTRAINTS

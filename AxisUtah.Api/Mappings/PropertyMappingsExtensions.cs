@@ -67,4 +67,9 @@ public static class PropertyMappingsExtensions
             Order = m.Order ?? index
         }).ToList() ?? [];
     }
+
+    public static LoginRequest ToLoginRequest(this User user)
+    {
+        return new LoginRequest(user.Email, user.Password);
+    }
 }

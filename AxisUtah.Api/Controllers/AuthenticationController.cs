@@ -16,12 +16,12 @@ public class AuthController(
     public async Task<IActionResult> Register([FromBody] LoginRequest model)
     {
         if ( model.Email == null || model.Password == null)
-            return BadRequest(new { message = "Email and password are required." });
+            return BadRequest(new { message = "Email and password are required" });
 
         using var context = _dbContextFactory.CreateDbContext();
 
         if (context.Users.Any(u => u.Email == model.Email))
-            return BadRequest(new { message = "Email is already registered." });
+            return BadRequest(new { message = "Email is already registered" });
 
         var user = new User
         {
@@ -48,7 +48,7 @@ public class AuthController(
 
         return Ok(new
         {
-            message = "Registration successful.",
+            message = "Registration successful",
             token = new JwtSecurityTokenHandler().WriteToken(GenerateJwtToken(user)),
             Token_type = "Bearer",
             expires_utc = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes)
@@ -60,7 +60,7 @@ public class AuthController(
     public async Task<IActionResult> IssueToken([FromBody] LoginRequest request)
     {
         if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
-            return BadRequest(new { message = "Email and password are required." });
+            return BadRequest(new { message = "Email and password are required" });
 
         using var context = _dbContextFactory.CreateDbContext();
         
@@ -68,10 +68,10 @@ public class AuthController(
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null)
-            return Unauthorized(new { message = "Invalid username or password." });
+            return Unauthorized(new { message = "Invalid username or password" });
 
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
-        if (!isPasswordValid) return Unauthorized(new { message = "Invalid username or password." });
+        if (!isPasswordValid) return Unauthorized(new { message = "Invalid username or password" });
 
         var newRefreshToken = new RefreshToken
         {
@@ -99,7 +99,7 @@ public class AuthController(
     public async Task<IActionResult> Refresh()
     {
         if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken) || string.IsNullOrEmpty(refreshToken))
-            return Unauthorized(new { message = "Refresh token is missing." });
+            return Unauthorized(new { message = "Refresh token is missing" });
 
         using var context = _dbContextFactory.CreateDbContext();
         
@@ -108,7 +108,7 @@ public class AuthController(
             .FirstOrDefault(rt => rt.Token == refreshToken);
 
         if (storedToken == null || storedToken.User == null || !storedToken.IsActive)
-            return Unauthorized(new { message = "Invalid or expired refresh token." });
+            return Unauthorized(new { message = "Invalid or expired refresh token" });
         
         var newRefreshToken = new RefreshToken
         {
@@ -133,7 +133,7 @@ public class AuthController(
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        if (Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+        if (Request.Cookies.TryGetValue("refreshToken", out var refreshToken) && !string.IsNullOrEmpty(refreshToken))
         {
             using var context = _dbContextFactory.CreateDbContext();
 
@@ -154,7 +154,7 @@ public class AuthController(
             SameSite = SameSiteMode.Strict
         });
 
-        return Ok(new { message = "Logged out successfully." });
+        return Ok(new { message = "Logged out successfully" });
     }
 
     private JwtSecurityToken GenerateJwtToken(User user)
