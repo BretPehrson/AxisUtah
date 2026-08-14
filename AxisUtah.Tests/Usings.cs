@@ -16,4 +16,5 @@ global using AxisUtah.Api.Data;
 global using AxisUtah.Api.Models;
 global using AxisUtah.Api.Features.Authentication;
 global using AxisUtah.Api.Features.Authentication.Contracts;
+global using AxisUtah.Api.Configuration;
 global using AxisUtah.Tests.Data;

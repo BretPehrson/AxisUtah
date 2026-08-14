@@ -7,6 +7,8 @@ public class AuthenticationControllerTest
     private readonly IDbContextFactory<AppDbContext> _context;
     private readonly IOptions<JwtOption> _jwtOptions;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly AuthTokenService _authTokenService;
+    private readonly AuthService _authService;
 
     public AuthenticationControllerTest()
     {
@@ -27,9 +29,12 @@ public class AuthenticationControllerTest
             Audience = "AxisUtahUsers",
             ExpiryMinutes = 5
         });
+
+        _authTokenService = new AuthTokenService(_jwtOptions, _webHostEnvironment);
+        _authService = new AuthService(_context, _authTokenService);
     }
 
-    private AuthController CreateController() => new(_context, _jwtOptions, _webHostEnvironment)
+    private AuthController CreateController() => new(_authService, _authTokenService)
     {
         ControllerContext = TestAuthHelper.GetControllerContext(null)
     };
@@ -223,7 +228,7 @@ public class AuthenticationControllerTest
         Assert.False(string.IsNullOrEmpty(refreshTokenValue));
 
         // Create a new controller with the refresh token in the request cookies
-        var refreshController = new AuthController(_context, _jwtOptions, _webHostEnvironment)
+        var refreshController = new AuthController(_authService, _authTokenService)
         {
             ControllerContext = TestAuthHelper.GetControllerContext(null, new Dictionary<string, string>
             {
@@ -365,7 +370,7 @@ public class AuthenticationControllerTest
         
         var result = await controller.IssueToken(request);
         
-        var badResult = Assert.IsType<BadRequestObjectResult>(result);
+        var badResult = Assert.IsType<UnauthorizedObjectResult>(result);
         var response = new RouteValueDictionary(badResult.Value);
         Assert.Equal("Email and password are required", response["message"]);
     }
@@ -389,7 +394,7 @@ public class AuthenticationControllerTest
         Assert.False(string.IsNullOrEmpty(refreshTokenValue));
 
         // Create a new controller with the refresh token in the request cookies
-        var refreshController = new AuthController(_context, _jwtOptions, _webHostEnvironment)
+        var refreshController = new AuthController(_authService, _authTokenService)
         {
             ControllerContext = TestAuthHelper.GetControllerContext(null, new Dictionary<string, string>
             {
