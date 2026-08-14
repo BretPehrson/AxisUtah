@@ -14,7 +14,6 @@ public class ODataSyncService(HttpClient httpClient, AppDbContext db, AppLogServ
         var insertedCount = 0;
         var updatedCount = 0;
 
-        // 1. Construct lean RESO OData query using $select and $filter
         string oDataSelect = "$select=ListingKey,ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,BuildingAreaTotal,StandardStatus,PropertyType,StructureType,PublicRemarks,UnparsedAddress,City,StateOrProvince,PostalCode,Latitude,Longitude,ListAgentFullName,ListOfficeName,ModificationTimestamp,Media";
         string oDataFilter = $"$filter=ModificationTimestamp gt {lastSync:yyyy-MM-ddTHH:mm:ssZ} and StandardStatus eq 'Active'";
         string? requestUrl = $"Property?{oDataSelect}&{oDataFilter}";

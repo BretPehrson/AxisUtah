@@ -18,6 +18,8 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddScoped<ListingSyncCoordinator>();
 builder.Services.AddScoped<AppLogService>();
+builder.Services.AddScoped<AuthTokenService>();
+builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddCors(options =>
 {

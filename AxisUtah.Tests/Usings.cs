@@ -9,12 +9,11 @@ global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.Options;
 global using Microsoft.AspNetCore.Hosting;
 global using Microsoft.EntityFrameworkCore.Infrastructure;
-global using Microsoft.Extensions.FileProviders;
-global using Microsoft.Extensions.Hosting;
 global using Microsoft.AspNetCore.Routing;
 
 // Project-specific usings
 global using AxisUtah.Api.Data;
-global using AxisUtah.Api.Controllers;
 global using AxisUtah.Api.Models;
+global using AxisUtah.Api.Features.Authentication;
+global using AxisUtah.Api.Features.Authentication.Contracts;
 global using AxisUtah.Tests.Data;

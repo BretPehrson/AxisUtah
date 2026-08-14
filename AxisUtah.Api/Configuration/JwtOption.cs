@@ -1,4 +1,4 @@
-namespace AxisUtah.Api.Models;
+namespace AxisUtah.Api.Configuration;
 
 public class JwtOption
 {
