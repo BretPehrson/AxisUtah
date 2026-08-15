@@ -27,6 +27,10 @@ public class Property
     public bool IsBrokerageListing { get; set; }
     public bool IsActive { get; set; }
 
+    [ForeignKey(nameof(User))]
+    public int? UserId { get; set; }
+    public User? User { get; set; }
+
     [ForeignKey(nameof(Address))]
     public int? AddressId { get; set; }
     public Address? Address { get; set; }

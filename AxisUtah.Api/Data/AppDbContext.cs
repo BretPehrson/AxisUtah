@@ -97,6 +97,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(p => p.BrokerageId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Property -> User
+        modelBuilder.Entity<Property>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // PropertyMedia -> Property (1:Many relationship)
         modelBuilder.Entity<PropertyMedia>()
             .HasOne(m => m.Property)
