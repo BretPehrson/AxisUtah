@@ -27,10 +27,6 @@ public class Property
     public bool IsBrokerageListing { get; set; }
     public bool IsActive { get; set; }
 
-    [ForeignKey(nameof(User))]
-    public int? UserId { get; set; }
-    public User? User { get; set; }
-
     [ForeignKey(nameof(Address))]
     public int? AddressId { get; set; }
     public Address? Address { get; set; }
@@ -49,6 +45,16 @@ public class Property
 
     // Navigation Property for CDN Images
     public List<PropertyMedia> Media { get; set; } = new();
+}
+
+public class SavedProperty
+{
+    public int UserId { get; set; }
+    public int ListingKey { get; set; }
+    public bool Active { get; set; } = true;
+
+    public User User { get; set; } = null!;
+    public Property Property { get; set; } = null!;
 }
 
 public class PropertyMedia

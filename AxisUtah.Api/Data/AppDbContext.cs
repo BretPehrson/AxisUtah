@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserInfo> UserInfos => Set<UserInfo>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PropertyHistory> PropertyHistories => Set<PropertyHistory>();
+    public DbSet<SavedProperty> SavedProperties => Set<SavedProperty>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +37,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Property>()
             .HasQueryFilter(p => p.IsActive);
+
+        modelBuilder.Entity<SavedProperty>()
+            .HasQueryFilter(sp => sp.Active && sp.Property.IsActive);
 
         modelBuilder.Entity<PropertyMedia>()
             .HasQueryFilter(pm => pm.Property!.IsActive);
@@ -97,12 +101,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(p => p.BrokerageId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Property -> User
-        modelBuilder.Entity<Property>()
-            .HasOne(p => p.User)
+        // User -> SavedProperty (many-to-many association with soft delete)
+        modelBuilder.Entity<SavedProperty>()
+            .HasKey(sp => new { sp.UserId, sp.ListingKey });
+
+        modelBuilder.Entity<SavedProperty>()
+            .HasOne(sp => sp.User)
+            .WithMany(u => u.SavedProperties)
+            .HasForeignKey(sp => sp.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SavedProperty>()
+            .HasOne(sp => sp.Property)
             .WithMany()
-            .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasForeignKey(sp => sp.ListingKey)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // PropertyMedia -> Property (1:Many relationship)
         modelBuilder.Entity<PropertyMedia>()

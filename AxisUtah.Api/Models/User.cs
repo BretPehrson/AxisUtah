@@ -25,4 +25,5 @@ public class User
     // Navigation Properties
     public UserInfo? UserInfo { get; set; }
     public List<RefreshToken> RefreshTokens { get; set; } = new();
+    public List<SavedProperty> SavedProperties { get; set; } = new();
 }
