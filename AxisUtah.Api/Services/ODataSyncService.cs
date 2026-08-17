@@ -19,8 +19,6 @@ public class ODataSyncService(HttpClient httpClient, AppDbContext db, AppLogServ
         string? requestUrl = $"Property?{oDataSelect}&{oDataFilter}";
         DateTimeOffset? latestModificationTimestamp = null;
 
-        _logger.LogInformation("Starting OData property sync from {LastSyncTimestamp}.", lastSync);
-
         while (!string.IsNullOrWhiteSpace(requestUrl))
         {
             pageCount++;
@@ -63,14 +61,6 @@ public class ODataSyncService(HttpClient httpClient, AppDbContext db, AppLogServ
         }
 
         var durationMs = (DateTimeOffset.UtcNow - startedAt).TotalMilliseconds;
-        _logger.LogInformation(
-            "MLS sync completed. Pages={PageCount} Inserted={InsertedCount} Updated={UpdatedCount} Through={LastModificationTimestamp} DurationMs={DurationMs}.",
-            pageCount,
-            insertedCount,
-            updatedCount,
-            latestModificationTimestamp ?? lastSync,
-            durationMs);
-
         await _appLogService.WriteAsync(
             level: "Information",
             category: nameof(ODataSyncService),

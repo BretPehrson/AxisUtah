@@ -33,3 +33,36 @@ public class PropertyMediaDto
     public string MediaUrl { get; set; } = string.Empty;
     public int Order { get; set; }
 }
+
+public sealed class PropertySearchRequest
+{
+    public string? Search { get; init; }
+
+    public decimal? MinPrice { get; init; }
+    public decimal? MaxPrice { get; init; }
+
+    public int? MinBedrooms { get; init; }
+    public decimal? MinBathrooms { get; init; }
+    public int? MinBuildingArea { get; init; }
+
+    public string? City { get; init; }
+    public string? StateOrProvince { get; init; }
+    public string? PostalCode { get; init; }
+    public string? PropertyType { get; init; }
+    public string? StandardStatus { get; init; }
+
+    public bool? BrokerageOnly { get; init; }
+
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } =  20;
+    public string SortBy { get; init; } = "ModificationTimestamp";
+    public bool SortDescending { get; init; } = true;
+}
+
+public sealed class PagedResult<T>
+{
+    public IReadOnlyList<T> Items { get; init; } = [];
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+}
