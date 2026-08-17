@@ -228,14 +228,14 @@ namespace AxisUtah.Api.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PropertyListingKey")
+                    b.Property<int?>("PropertyId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email");
 
-                    b.HasIndex("PropertyListingKey", "CreatedAt")
+                    b.HasIndex("PropertyId", "CreatedAt")
                         .IsDescending(false, true);
 
                     b.ToTable("Leads");
@@ -243,8 +243,11 @@ namespace AxisUtah.Api.Migrations
 
             modelBuilder.Entity("AxisUtah.Api.Models.Property", b =>
                 {
-                    b.Property<int>("ListingKey")
+                    b.Property<int>("PropertyId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PropertyId"));
 
                     b.Property<int?>("AddressId")
                         .HasColumnType("int");
@@ -291,6 +294,9 @@ namespace AxisUtah.Api.Migrations
                     b.Property<string>("ListingId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("ListingKey")
+                        .HasColumnType("int");
+
                     b.Property<double?>("Longitude")
                         .HasColumnType("float");
 
@@ -318,14 +324,17 @@ namespace AxisUtah.Api.Migrations
                     b.Property<string>("UnparsedAddress")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("ListingKey");
+                    b.HasKey("PropertyId");
 
                     b.HasIndex("AddressId");
 
-                    b.HasIndex("ListingKey");
+                    b.HasIndex("ListingKey")
+                        .IsUnique();
 
                     b.HasIndex("ModificationTimestamp")
                         .IsDescending();
+
+                    b.HasIndex("PropertyId");
 
                     b.HasIndex("AgentId", "StandardStatus");
 
@@ -353,14 +362,14 @@ namespace AxisUtah.Api.Migrations
                     b.Property<int>("FieldType")
                         .HasColumnType("int");
 
-                    b.Property<int>("ListingKey")
-                        .HasColumnType("int");
-
                     b.Property<string>("NewValue")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OldValue")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -373,9 +382,9 @@ namespace AxisUtah.Api.Migrations
 
                     b.HasIndex("CorrelationId");
 
-                    b.HasIndex("ListingKey");
+                    b.HasIndex("PropertyId");
 
-                    b.HasIndex("ListingKey", "ChangedAtUtc")
+                    b.HasIndex("PropertyId", "ChangedAtUtc")
                         .IsDescending(false, true);
 
                     b.ToTable("PropertyHistories");
@@ -389,9 +398,6 @@ namespace AxisUtah.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ListingKey")
-                        .HasColumnType("int");
-
                     b.Property<string>("MediaUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -399,9 +405,12 @@ namespace AxisUtah.Api.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ListingKey", "Order");
+                    b.HasIndex("PropertyId", "Order");
 
                     b.ToTable("PropertyMedia");
                 });
@@ -446,15 +455,15 @@ namespace AxisUtah.Api.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ListingKey")
+                    b.Property<int>("PropertyId")
                         .HasColumnType("int");
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
 
-                    b.HasKey("UserId", "ListingKey");
+                    b.HasKey("UserId", "PropertyId");
 
-                    b.HasIndex("ListingKey");
+                    b.HasIndex("PropertyId");
 
                     b.ToTable("SavedProperties");
                 });
@@ -592,7 +601,7 @@ namespace AxisUtah.Api.Migrations
                 {
                     b.HasOne("AxisUtah.Api.Models.Property", "Property")
                         .WithMany()
-                        .HasForeignKey("PropertyListingKey")
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Property");
@@ -626,7 +635,7 @@ namespace AxisUtah.Api.Migrations
                 {
                     b.HasOne("AxisUtah.Api.Models.Property", "Property")
                         .WithMany()
-                        .HasForeignKey("ListingKey")
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -637,7 +646,7 @@ namespace AxisUtah.Api.Migrations
                 {
                     b.HasOne("AxisUtah.Api.Models.Property", "Property")
                         .WithMany("Media")
-                        .HasForeignKey("ListingKey")
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -658,7 +667,7 @@ namespace AxisUtah.Api.Migrations
                 {
                     b.HasOne("AxisUtah.Api.Models.Property", "Property")
                         .WithMany()
-                        .HasForeignKey("ListingKey")
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -3,8 +3,12 @@ namespace AxisUtah.Api.Models;
 public class Property
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int PropertyId { get; set; }
+
+    [Required]
     public int ListingKey { get; set; }
+
     public string? ListingId { get; set; }
     [Column(TypeName = "decimal(18, 2)")]
     public decimal? ListPrice { get; set; }
@@ -50,7 +54,7 @@ public class Property
 public class SavedProperty
 {
     public int UserId { get; set; }
-    public int ListingKey { get; set; }
+    public int PropertyId { get; set; }
     public bool Active { get; set; } = true;
 
     public User User { get; set; } = null!;
@@ -60,12 +64,12 @@ public class SavedProperty
 public class PropertyMedia
 {
     public int Id { get; set; }
-
-    public int ListingKey { get; set; }
     
-    [ForeignKey(nameof(ListingKey))]
+    public int PropertyId { get; set; }
+    
+    [ForeignKey(nameof(PropertyId))]
     public Property? Property { get; set; }
-
+                
     public string MediaUrl { get; set; } = string.Empty;
     public int Order { get; set; }
 }
@@ -79,8 +83,8 @@ public class Lead
     public string? Phone { get; set; }
     public string? Message { get; set; }
 
-    public int? PropertyListingKey { get; set; } // Nullable if general inquiry
-    [ForeignKey(nameof(PropertyListingKey))]
+    public int? PropertyId { get; set; } // Nullable if general inquiry
+    [ForeignKey(nameof(PropertyId))]
     public Property? Property { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

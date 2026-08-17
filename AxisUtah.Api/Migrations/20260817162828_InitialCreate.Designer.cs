@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AxisUtah.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260801192118_InitialCreate")]
+    [Migration("20260817162828_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -231,14 +231,14 @@ namespace AxisUtah.Api.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PropertyListingKey")
+                    b.Property<int?>("PropertyId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email");
 
-                    b.HasIndex("PropertyListingKey", "CreatedAt")
+                    b.HasIndex("PropertyId", "CreatedAt")
                         .IsDescending(false, true);
 
                     b.ToTable("Leads");
@@ -246,8 +246,11 @@ namespace AxisUtah.Api.Migrations
 
             modelBuilder.Entity("AxisUtah.Api.Models.Property", b =>
                 {
-                    b.Property<int>("ListingKey")
+                    b.Property<int>("PropertyId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PropertyId"));
 
                     b.Property<int?>("AddressId")
                         .HasColumnType("int");
@@ -270,6 +273,9 @@ namespace AxisUtah.Api.Migrations
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsBrokerageListing")
                         .HasColumnType("bit");
 
@@ -290,6 +296,9 @@ namespace AxisUtah.Api.Migrations
 
                     b.Property<string>("ListingId")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ListingKey")
+                        .HasColumnType("int");
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("float");
@@ -318,14 +327,17 @@ namespace AxisUtah.Api.Migrations
                     b.Property<string>("UnparsedAddress")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("ListingKey");
+                    b.HasKey("PropertyId");
 
                     b.HasIndex("AddressId");
 
-                    b.HasIndex("ListingKey");
+                    b.HasIndex("ListingKey")
+                        .IsUnique();
 
                     b.HasIndex("ModificationTimestamp")
                         .IsDescending();
+
+                    b.HasIndex("PropertyId");
 
                     b.HasIndex("AgentId", "StandardStatus");
 
@@ -336,6 +348,51 @@ namespace AxisUtah.Api.Migrations
                     b.ToTable("Properties");
                 });
 
+            modelBuilder.Entity("AxisUtah.Api.Models.PropertyHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("ChangedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CorrelationId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("FieldType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedAtUtc")
+                        .IsDescending();
+
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("PropertyId", "ChangedAtUtc")
+                        .IsDescending(false, true);
+
+                    b.ToTable("PropertyHistories");
+                });
+
             modelBuilder.Entity("AxisUtah.Api.Models.PropertyMedia", b =>
                 {
                     b.Property<int>("Id")
@@ -344,9 +401,6 @@ namespace AxisUtah.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ListingKey")
-                        .HasColumnType("int");
-
                     b.Property<string>("MediaUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -354,9 +408,12 @@ namespace AxisUtah.Api.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ListingKey", "Order");
+                    b.HasIndex("PropertyId", "Order");
 
                     b.ToTable("PropertyMedia");
                 });
@@ -394,6 +451,24 @@ namespace AxisUtah.Api.Migrations
                         .IsDescending(false, true);
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("AxisUtah.Api.Models.SavedProperty", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.HasKey("UserId", "PropertyId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("SavedProperties");
                 });
 
             modelBuilder.Entity("AxisUtah.Api.Models.SyncCheckpoint", b =>
@@ -529,7 +604,7 @@ namespace AxisUtah.Api.Migrations
                 {
                     b.HasOne("AxisUtah.Api.Models.Property", "Property")
                         .WithMany()
-                        .HasForeignKey("PropertyListingKey")
+                        .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Property");
@@ -559,12 +634,23 @@ namespace AxisUtah.Api.Migrations
                     b.Navigation("Brokerage");
                 });
 
+            modelBuilder.Entity("AxisUtah.Api.Models.PropertyHistory", b =>
+                {
+                    b.HasOne("AxisUtah.Api.Models.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("AxisUtah.Api.Models.PropertyMedia", b =>
                 {
                     b.HasOne("AxisUtah.Api.Models.Property", "Property")
                         .WithMany("Media")
-                        .HasForeignKey("ListingKey")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Property");
@@ -576,6 +662,25 @@ namespace AxisUtah.Api.Migrations
                         .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AxisUtah.Api.Models.SavedProperty", b =>
+                {
+                    b.HasOne("AxisUtah.Api.Models.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AxisUtah.Api.Models.User", "User")
+                        .WithMany("SavedProperties")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
 
                     b.Navigation("User");
                 });
@@ -599,6 +704,8 @@ namespace AxisUtah.Api.Migrations
             modelBuilder.Entity("AxisUtah.Api.Models.User", b =>
                 {
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("SavedProperties");
 
                     b.Navigation("UserInfo");
                 });

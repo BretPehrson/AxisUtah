@@ -103,7 +103,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         // User -> SavedProperty (many-to-many association with soft delete)
         modelBuilder.Entity<SavedProperty>()
-            .HasKey(sp => new { sp.UserId, sp.ListingKey });
+            .HasKey(sp => new { sp.UserId, sp.PropertyId });
 
         modelBuilder.Entity<SavedProperty>()
             .HasOne(sp => sp.User)
@@ -114,14 +114,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<SavedProperty>()
             .HasOne(sp => sp.Property)
             .WithMany()
-            .HasForeignKey(sp => sp.ListingKey)
+            .HasForeignKey(sp => sp.PropertyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // PropertyMedia -> Property (1:Many relationship)
         modelBuilder.Entity<PropertyMedia>()
             .HasOne(m => m.Property)
             .WithMany(p => p.Media)
-            .HasForeignKey(m => m.ListingKey)
+            .HasForeignKey(m => m.PropertyId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Agent -> Brokerage
@@ -135,14 +135,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Lead>()
             .HasOne(l => l.Property)
             .WithMany()
-            .HasForeignKey(l => l.PropertyListingKey)
+            .HasForeignKey(l => l.PropertyId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // PropertyHistory -> Property
         modelBuilder.Entity<PropertyHistory>()
             .HasOne(ph => ph.Property)
             .WithMany()
-            .HasForeignKey(ph => ph.ListingKey)
+            .HasForeignKey(ph => ph.PropertyId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ====================
@@ -162,20 +162,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .IsDescending();
 
         modelBuilder.Entity<Property>()
-            .HasIndex(p => p.ListingKey);
+            .HasIndex(p => p.PropertyId);
+
+        modelBuilder.Entity<Property>()
+            .HasIndex(p => p.ListingKey)
+            .IsUnique();
 
         // ====================
         // INDEXES - PROPERTY HISTORY
         // ====================
         modelBuilder.Entity<PropertyHistory>()
-            .HasIndex(ph => ph.ListingKey);
+            .HasIndex(ph => ph.PropertyId);
 
         modelBuilder.Entity<PropertyHistory>()
             .HasIndex(ph => ph.ChangedAtUtc)
             .IsDescending();
 
         modelBuilder.Entity<PropertyHistory>()
-            .HasIndex(ph => new { ph.ListingKey, ph.ChangedAtUtc })
+            .HasIndex(ph => new { ph.PropertyId, ph.ChangedAtUtc })
             .IsDescending(false, true);
 
         modelBuilder.Entity<PropertyHistory>()
@@ -185,13 +189,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // INDEXES - PROPERTY MEDIA
         // ====================
         modelBuilder.Entity<PropertyMedia>()
-            .HasIndex(m => new { m.ListingKey, m.Order });
+            .HasIndex(m => new { m.PropertyId, m.Order });
 
         // ====================
         // INDEXES - LEAD
         // ====================
         modelBuilder.Entity<Lead>()
-            .HasIndex(l => new { l.PropertyListingKey, l.CreatedAt })
+            .HasIndex(l => new { l.PropertyId, l.CreatedAt })
             .IsDescending(false, true);
 
         modelBuilder.Entity<Lead>()

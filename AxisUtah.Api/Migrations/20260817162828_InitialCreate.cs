@@ -182,6 +182,8 @@ namespace AxisUtah.Api.Migrations
                 name: "Properties",
                 columns: table => new
                 {
+                    PropertyId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     ListingKey = table.Column<int>(type: "int", nullable: false),
                     ListingId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ListPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
@@ -201,6 +203,7 @@ namespace AxisUtah.Api.Migrations
                     ListAgentFullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ListOfficeName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsBrokerageListing = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     AddressId = table.Column<int>(type: "int", nullable: true),
                     AgentId = table.Column<int>(type: "int", nullable: true),
                     BrokerageId = table.Column<int>(type: "int", nullable: true),
@@ -209,7 +212,7 @@ namespace AxisUtah.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Properties", x => x.ListingKey);
+                    table.PrimaryKey("PK_Properties", x => x.PropertyId);
                     table.ForeignKey(
                         name: "FK_Properties_Addresses_AddressId",
                         column: x => x.AddressId,
@@ -240,18 +243,43 @@ namespace AxisUtah.Api.Migrations
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PropertyListingKey = table.Column<int>(type: "int", nullable: true),
+                    PropertyId = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Leads", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Leads_Properties_PropertyListingKey",
-                        column: x => x.PropertyListingKey,
+                        name: "FK_Leads_Properties_PropertyId",
+                        column: x => x.PropertyId,
                         principalTable: "Properties",
-                        principalColumn: "ListingKey",
+                        principalColumn: "PropertyId",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PropertyHistories",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PropertyId = table.Column<int>(type: "int", nullable: false),
+                    FieldType = table.Column<int>(type: "int", nullable: false),
+                    OldValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NewValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ChangedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CorrelationId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PropertyHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PropertyHistories_Properties_PropertyId",
+                        column: x => x.PropertyId,
+                        principalTable: "Properties",
+                        principalColumn: "PropertyId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -260,7 +288,7 @@ namespace AxisUtah.Api.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ListingKey = table.Column<int>(type: "int", nullable: false),
+                    PropertyId = table.Column<int>(type: "int", nullable: false),
                     MediaUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false)
                 },
@@ -268,10 +296,35 @@ namespace AxisUtah.Api.Migrations
                 {
                     table.PrimaryKey("PK_PropertyMedia", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PropertyMedia_Properties_ListingKey",
-                        column: x => x.ListingKey,
+                        name: "FK_PropertyMedia_Properties_PropertyId",
+                        column: x => x.PropertyId,
                         principalTable: "Properties",
-                        principalColumn: "ListingKey",
+                        principalColumn: "PropertyId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SavedProperties",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    PropertyId = table.Column<int>(type: "int", nullable: false),
+                    Active = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SavedProperties", x => new { x.UserId, x.PropertyId });
+                    table.ForeignKey(
+                        name: "FK_SavedProperties_Properties_PropertyId",
+                        column: x => x.PropertyId,
+                        principalTable: "Properties",
+                        principalColumn: "PropertyId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SavedProperties_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -338,9 +391,9 @@ namespace AxisUtah.Api.Migrations
                 column: "Email");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Leads_PropertyListingKey_CreatedAt",
+                name: "IX_Leads_PropertyId_CreatedAt",
                 table: "Leads",
-                columns: new[] { "PropertyListingKey", "CreatedAt" },
+                columns: new[] { "PropertyId", "CreatedAt" },
                 descending: new[] { false, true });
 
             migrationBuilder.CreateIndex(
@@ -366,7 +419,8 @@ namespace AxisUtah.Api.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Properties_ListingKey",
                 table: "Properties",
-                column: "ListingKey");
+                column: "ListingKey",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Properties_ModificationTimestamp",
@@ -375,9 +429,36 @@ namespace AxisUtah.Api.Migrations
                 descending: new bool[0]);
 
             migrationBuilder.CreateIndex(
-                name: "IX_PropertyMedia_ListingKey_Order",
+                name: "IX_Properties_PropertyId",
+                table: "Properties",
+                column: "PropertyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PropertyHistories_ChangedAtUtc",
+                table: "PropertyHistories",
+                column: "ChangedAtUtc",
+                descending: new bool[0]);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PropertyHistories_CorrelationId",
+                table: "PropertyHistories",
+                column: "CorrelationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PropertyHistories_PropertyId",
+                table: "PropertyHistories",
+                column: "PropertyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PropertyHistories_PropertyId_ChangedAtUtc",
+                table: "PropertyHistories",
+                columns: new[] { "PropertyId", "ChangedAtUtc" },
+                descending: new[] { false, true });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PropertyMedia_PropertyId_Order",
                 table: "PropertyMedia",
-                columns: new[] { "ListingKey", "Order" });
+                columns: new[] { "PropertyId", "Order" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_Expires",
@@ -395,6 +476,11 @@ namespace AxisUtah.Api.Migrations
                 table: "RefreshTokens",
                 columns: new[] { "UserId", "Expires" },
                 descending: new[] { false, true });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SavedProperties_PropertyId",
+                table: "SavedProperties",
+                column: "PropertyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserInfos_UserId",
@@ -435,10 +521,16 @@ namespace AxisUtah.Api.Migrations
                 name: "Leads");
 
             migrationBuilder.DropTable(
+                name: "PropertyHistories");
+
+            migrationBuilder.DropTable(
                 name: "PropertyMedia");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "SavedProperties");
 
             migrationBuilder.DropTable(
                 name: "SyncCheckpoints");

@@ -15,7 +15,7 @@ public class PropertyHistory
     public long Id { get; set; }
 
     [ForeignKey(nameof(Property))]
-    public int ListingKey { get; set; }
+    public int PropertyId { get; set; }
     public Property? Property { get; set; }
 
     public PropertyFieldType FieldType { get; set; }

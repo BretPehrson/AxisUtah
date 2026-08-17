@@ -30,4 +30,4 @@ public record ResoPropertyDto(
     List<ResoMediaDto>? Media
 );
 
-public record ResoMediaDto(string MediaURL, int? Order = null);
+public record ResoMediaDto(string MediaUrl, int? Order = null);

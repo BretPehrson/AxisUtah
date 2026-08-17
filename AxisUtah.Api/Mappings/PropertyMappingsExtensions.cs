@@ -28,8 +28,7 @@ public static class PropertyMappingsExtensions
             ModificationTimestamp = dto.ModificationTimestamp,
             Media = dto.Media?.Select((m, index) => new PropertyMedia
             {
-                ListingKey = dto.ListingKey,
-                MediaUrl = m.MediaURL,
+                MediaUrl = m.MediaUrl,
                 Order = m.Order ?? index
             }).ToList() ?? []
         };
@@ -37,6 +36,7 @@ public static class PropertyMappingsExtensions
 
     public static void UpdateEntityFromDto(this Property entity, ResoPropertyDto dto)
     {
+        entity.ListingKey = dto.ListingKey;
         entity.ListingId = dto.ListingId;
         entity.ListPrice = dto.ListPrice;
         entity.BedroomsTotal = dto.BedroomsTotal;
@@ -62,8 +62,8 @@ public static class PropertyMappingsExtensions
         entity.Media.Clear();
         entity.Media = dto.Media?.Select((m, index) => new PropertyMedia
         {
-            ListingKey = dto.ListingKey,
-            MediaUrl = m.MediaURL,
+            PropertyId = entity.PropertyId,
+            MediaUrl = m.MediaUrl,
             Order = m.Order ?? index
         }).ToList() ?? [];
     }
