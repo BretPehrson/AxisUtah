@@ -20,3 +20,4 @@ global using Microsoft.Extensions.Options;
 global using Microsoft.IdentityModel.Tokens;
 global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using AxisUtah.Api.Endpoints;
+global using AxisUtah.Api.Extensions;

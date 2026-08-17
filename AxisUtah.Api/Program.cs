@@ -20,6 +20,7 @@ builder.Services.AddScoped<ListingSyncCoordinator>();
 builder.Services.AddScoped<AppLogService>();
 builder.Services.AddScoped<AuthTokenService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<PropertyService>();
 
 builder.Services.AddCors(options =>
 {
@@ -108,6 +109,12 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogError(ex, "===> DATABASE CONNECTION FAILED!");
         throw; // Re-throw so the app stops with full stack trace
+    }
+
+    if (app.Environment.IsDevelopment())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await DevDataSeeder.SeedTestPropertiesAsync(db);
     }
 }
 
