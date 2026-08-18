@@ -37,7 +37,8 @@ builder.Services.AddScoped<ListingSyncCoordinator>();
 builder.Services.AddScoped<AppLogService>();
 builder.Services.AddScoped<AuthTokenService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<PropertyService>();
+builder.Services.AddScoped<IPropertyService, PropertyService>();
+builder.Services.AddScoped<IBrokerageService, BrokerageService>();
 
 builder.Services.AddCors(options =>
 {

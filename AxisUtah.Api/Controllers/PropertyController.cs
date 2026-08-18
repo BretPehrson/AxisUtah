@@ -2,9 +2,9 @@ namespace AxisUtah.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PropertyController(PropertyService propertyService) : ControllerBase
+public class PropertyController(IPropertyService propertyService) : ControllerBase
 {
-    private readonly PropertyService _propertyService = propertyService;
+    private readonly IPropertyService _propertyService = propertyService;
 
     [Authorize]
     [HttpGet("{propertyid}")]

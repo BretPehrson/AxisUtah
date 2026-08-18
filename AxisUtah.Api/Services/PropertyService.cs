@@ -1,6 +1,16 @@
 namespace AxisUtah.Api.Services;
 
-public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
+public interface IPropertyService
+{
+    Task<IEnumerable<PropertyResponseDto>> GetAllUserSavedProperties(int? userId);
+    Task<PropertyResponseDto?> GetUserSavedPropertyById(int? userId, int propertyId);
+    Task<bool> SaveUserProperty(int? userId, int propertyId);
+    Task<bool> DeleteUserSavedProperty(int? userId, int propertyId);
+    Task<PropertyResponseDto?> GetPropertyById(int propertyId);
+    Task<PagedResult<PropertyResponseDto>> SearchAsync(PropertySearchRequest request);
+}
+
+public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory) : IPropertyService
 {
     private IDbContextFactory<AppDbContext> Context { get; } = dbContextFactory;
 
