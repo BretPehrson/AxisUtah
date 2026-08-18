@@ -21,3 +21,5 @@ global using Microsoft.IdentityModel.Tokens;
 global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using AxisUtah.Api.Endpoints;
 global using AxisUtah.Api.Extensions;
+global using Microsoft.OpenApi;
+global using Swashbuckle.AspNetCore.SwaggerGen;

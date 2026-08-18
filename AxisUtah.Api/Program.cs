@@ -14,6 +14,23 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
+
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.ParameterLocation.Header,
+        Description = "Enter a JWT token. Swagger will send it as: Bearer {token}"
+    });
+
+    options.AddSecurityRequirement(document => new Microsoft.OpenApi.OpenApiSecurityRequirement
+    {
+        [new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document, "")] = []
+    });
+
+    options.OperationFilter<AuthorizeCheckOperationFilter>();
 });
 
 builder.Services.AddScoped<ListingSyncCoordinator>();

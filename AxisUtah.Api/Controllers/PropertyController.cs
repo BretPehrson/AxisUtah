@@ -23,6 +23,10 @@ public class PropertyController(PropertyService propertyService) : ControllerBas
     public async Task<ActionResult<PagedResult<PropertyResponseDto>>> GetProperties([FromQuery] PropertySearchRequest request)
     {
         var result = await _propertyService.SearchAsync(request);
+        if (result.Items.Count == 0)
+        {
+            return NotFound();
+        }
         return Ok(result);
     }
 }

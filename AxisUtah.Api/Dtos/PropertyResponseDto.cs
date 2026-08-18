@@ -35,14 +35,23 @@ public class PropertyMediaDto
 }
 
 public sealed class PropertySearchRequest
+    : IValidatableObject
 {
     public string? Search { get; init; }
 
+    [Range(0, double.MaxValue)]
     public decimal? MinPrice { get; init; }
+
+    [Range(0, double.MaxValue)]
     public decimal? MaxPrice { get; init; }
 
+    [Range(0, int.MaxValue)]
     public int? MinBedrooms { get; init; }
+
+    [Range(0, double.MaxValue)]
     public decimal? MinBathrooms { get; init; }
+
+    [Range(0, int.MaxValue)]
     public int? MinBuildingArea { get; init; }
 
     public string? City { get; init; }
@@ -53,10 +62,23 @@ public sealed class PropertySearchRequest
 
     public bool? BrokerageOnly { get; init; }
 
+    [Range(1, int.MaxValue)]
     public int Page { get; init; } = 1;
-    public int PageSize { get; init; } =  20;
+
+    [Range(1, 100)]
+    public int PageSize { get; init; } = 20;
     public string SortBy { get; init; } = "ModificationTimestamp";
     public bool SortDescending { get; init; } = true;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (MinPrice.HasValue && MaxPrice.HasValue && MinPrice > MaxPrice)
+        {
+            yield return new ValidationResult(
+                "MinPrice cannot be greater than MaxPrice.",
+                [nameof(MinPrice), nameof(MaxPrice)]);
+        }
+    }
 }
 
 public sealed class PagedResult<T>

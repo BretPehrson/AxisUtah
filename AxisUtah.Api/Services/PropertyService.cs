@@ -9,11 +9,14 @@ public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
     public async Task<IEnumerable<PropertyResponseDto>> GetAllUserSavedProperties(int? userId)
     {
         using var context = Context.CreateDbContext();
-        return await context.SavedProperties
+        var properties = await context.SavedProperties
             .Where(sp => sp.UserId == userId && sp.Active)
+            .Include(sp => sp.Property)
+            .ThenInclude(p => p.Media)
             .Select(sp => sp.Property)
-            .Select(p => p.ToPropertyResponseDto())
             .ToListAsync();
+
+        return properties.Select(p => p.ToPropertyResponseDto());
     }
 
     public async Task<PropertyResponseDto?> GetUserSavedPropertyById(int? userId, int propertyId)
@@ -21,6 +24,8 @@ public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
         using var context = Context.CreateDbContext();
         var property = await context.SavedProperties
             .Where(sp => sp.UserId == userId && sp.Active)
+            .Include(sp => sp.Property)
+            .ThenInclude(sp => sp.Media)
             .Select(sp => sp.Property)
             .FirstOrDefaultAsync(p => p.PropertyId == propertyId);
         return property?.ToPropertyResponseDto();
@@ -84,6 +89,11 @@ public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
 
     public async Task<PagedResult<PropertyResponseDto>> SearchAsync(PropertySearchRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var page = Math.Max(request.Page, 1);
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+
         using var context = Context.CreateDbContext();
 
         var query = context.Properties
@@ -100,8 +110,29 @@ public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
         if (request.MinBedrooms.HasValue)
             query = query.Where(p => p.BedroomsTotal >= request.MinBedrooms.Value);
 
+        if (request.MinBathrooms.HasValue)
+            query = query.Where(p => p.BathroomsTotal >= request.MinBathrooms.Value);
+
+        if (request.MinBuildingArea.HasValue)
+            query = query.Where(p => p.BuildingAreaTotal >= request.MinBuildingArea.Value);
+
         if (!string.IsNullOrWhiteSpace(request.City))
             query = query.Where(p => p.City == request.City);
+
+        if (!string.IsNullOrWhiteSpace(request.StateOrProvince))
+            query = query.Where(p => p.StateOrProvince == request.StateOrProvince);
+
+        if (!string.IsNullOrWhiteSpace(request.PostalCode))
+            query = query.Where(p => p.PostalCode == request.PostalCode);
+
+        if (!string.IsNullOrWhiteSpace(request.PropertyType))
+            query = query.Where(p => p.PropertyType == request.PropertyType);
+
+        if (!string.IsNullOrWhiteSpace(request.StandardStatus))
+            query = query.Where(p => p.StandardStatus == request.StandardStatus);
+
+        if (request.BrokerageOnly == true)
+            query = query.Where(p => p.IsBrokerageListing);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -115,10 +146,26 @@ public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
 
         var totalCount = await query.CountAsync();
 
+        query = request.SortBy.ToLowerInvariant() switch
+        {
+            "listprice" => request.SortDescending
+                ? query.OrderByDescending(p => p.ListPrice)
+                : query.OrderBy(p => p.ListPrice),
+            "bedroomstotal" => request.SortDescending
+                ? query.OrderByDescending(p => p.BedroomsTotal)
+                : query.OrderBy(p => p.BedroomsTotal),
+            "buildingareatotal" => request.SortDescending
+                ? query.OrderByDescending(p => p.BuildingAreaTotal)
+                : query.OrderBy(p => p.BuildingAreaTotal),
+            _ => request.SortDescending
+                ? query.OrderByDescending(p => p.ModificationTimestamp)
+                : query.OrderBy(p => p.ModificationTimestamp)
+        };
+
         var items = await query
-            .OrderByDescending(p => p.ModificationTimestamp)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Include(p => p.Media)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         var itemDtos = items.Select(p => p.ToPropertyResponseDto()).ToList();
@@ -126,8 +173,8 @@ public class PropertyService(IDbContextFactory<AppDbContext> dbContextFactory)
         return new PagedResult<PropertyResponseDto>
         {
             Items = itemDtos,
-            Page = request.Page,
-            PageSize = request.PageSize,
+            Page = page,
+            PageSize = pageSize,
             TotalCount = totalCount
         };
     }
