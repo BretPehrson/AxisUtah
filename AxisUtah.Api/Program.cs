@@ -18,16 +18,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<IBrokerageService, BrokerageService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactApp", builder =>
-    {
-        builder.WithOrigins("http://localhost:5173")
-               .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials();
-    });
-});
+builder.Services.AddReactCORS();
 
 builder.Services.Configure<JwtOption>(builder.Configuration.GetSection("Jwt"));
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOption>() ?? throw new InvalidOperationException("JWT Settings are missing.");
