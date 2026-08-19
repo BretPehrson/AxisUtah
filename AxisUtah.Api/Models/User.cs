@@ -1,5 +1,12 @@
 namespace AxisUtah.Api.Models;
 
+public enum UserRole
+{
+    Admin,
+    User,
+    Guest
+}
+
 public class User
 {
     [Key]
@@ -19,11 +26,14 @@ public class User
     public bool IsEmailVerified { get; set; } = false;
 
     public bool IsActive { get; set; } = true;
+
+    [Required]
+    public UserRole Role { get; set; } = UserRole.User;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation Properties
     public UserInfo? UserInfo { get; set; }
-    public List<RefreshToken> RefreshTokens { get; set; } = new();
-    public List<SavedProperty> SavedProperties { get; set; } = new();
+    public List<RefreshToken> RefreshTokens { get; set; } = [];
+    public List<SavedProperty> SavedProperties { get; set; } = [];
 }

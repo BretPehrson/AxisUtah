@@ -15,7 +15,8 @@ public class AuthTokenService(
             new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("role", user.Role.ToString())
         };
 
         var signingKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtOptions.Key));
