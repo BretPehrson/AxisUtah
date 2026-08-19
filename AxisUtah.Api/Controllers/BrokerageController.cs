@@ -7,16 +7,9 @@ public class BrokerageController(IBrokerageService brokerageService) : Controlle
     private readonly IBrokerageService _brokerageService = brokerageService;
 
     [Authorize]
-    [HttpGet]
+    [HttpGet("{id:int}")]
     public async Task<BrokerageResponseDto?> GetBrokerageByIdAsync(int id)
     {
         return await _brokerageService.GetBrokerageByIdAsync(id);
-    }
-
-    [Authorize]
-    [HttpPut("{id}")]
-    public async Task<BrokerageResponseDto?> UpdateBrokerageAsync(int id, BrokerageResponseDto brokerageDto)
-    {
-        return await _brokerageService.UpdateBrokerageAsync(id, brokerageDto);
     }
 }
