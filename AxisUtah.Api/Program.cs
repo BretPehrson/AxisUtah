@@ -39,6 +39,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DevDataSeeder.SeedTestPropertiesAsync(db);
 }
 
 // Map internal sync endpoints

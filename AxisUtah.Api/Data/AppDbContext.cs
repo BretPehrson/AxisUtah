@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PropertyHistory> PropertyHistories => Set<PropertyHistory>();
     public DbSet<SavedProperty> SavedProperties => Set<SavedProperty>();
+    public DbSet<Lockbox> Lockboxes => Set<Lockbox>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,6 +81,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // User -> AgentProfile (1:1 relationship)
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.AgentProfile)
+            .WithOne(a => a.User)
+            .HasForeignKey<Agent>(a => a.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Property -> Address
         modelBuilder.Entity<Property>()
             .HasOne(p => p.Address)
@@ -129,6 +137,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne(a => a.Brokerage)
             .WithMany()
             .HasForeignKey(a => a.BrokerageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Agent -> Lockboxes
+        modelBuilder.Entity<Agent>()
+            .HasMany(a => a.Lockboxes)
+            .WithOne(l => l.AssignedAgent)
+            .HasForeignKey(l => l.AssignedAgentId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Lead -> Property
@@ -214,10 +229,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasIndex(a => new { a.BrokerageId, a.IsActive });
 
         modelBuilder.Entity<Agent>()
-            .HasIndex(a => a.Email);
+            .HasIndex(a => a.UserId)
+            .IsUnique();
 
-        modelBuilder.Entity<Agent>()
-            .HasIndex(a => new { a.LastName, a.FirstName });
+        // ====================
+        // INDEXES - LOCKBOX
+        // ====================
+        modelBuilder.Entity<Lockbox>()
+            .HasIndex(l => l.AssignedAgentId);
+
+        modelBuilder.Entity<Lockbox>()
+            .HasIndex(l => l.Status);
+
+        modelBuilder.Entity<Lockbox>()
+            .HasIndex(l => l.OwnerType);
+
+        modelBuilder.Entity<Lockbox>()
+            .HasIndex(l => l.CurrentMlsNumber);
 
         // ====================
         // INDEXES - BROKERAGE

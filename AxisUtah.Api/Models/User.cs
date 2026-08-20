@@ -3,8 +3,7 @@ namespace AxisUtah.Api.Models;
 public enum UserRole
 {
     Admin,
-    User,
-    Guest
+    User
 }
 
 public class User
@@ -32,8 +31,10 @@ public class User
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation Properties
-    public UserInfo? UserInfo { get; set; }
     public List<RefreshToken> RefreshTokens { get; set; } = [];
     public List<SavedProperty> SavedProperties { get; set; } = [];
+
+    public UserInfo? UserInfo { get; set; }
+
+    public Agent? AgentProfile { get; set; }
 }

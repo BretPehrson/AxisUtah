@@ -5,6 +5,8 @@ public static class DevDataSeeder
 {
     public static async Task SeedTestPropertiesAsync(AppDbContext db, CancellationToken cancellationToken = default)
     {
+        await SeedMissingUserInfoAsync(db, cancellationToken);
+
         if (await db.Properties.IgnoreQueryFilters().AnyAsync(cancellationToken))
         {
             return;
@@ -24,10 +26,6 @@ public static class DevDataSeeder
 
         var agent = new Agent
         {
-            FirstName = "Jane",
-            LastName = "Doe",
-            Email = "jane.doe@wasatchrealty.test",
-            Phone = "801-555-0101",
             Brokerage = brokerage
         };
 
@@ -73,7 +71,7 @@ public static class DevDataSeeder
                 PostalCode = address.PostalCode,
                 Latitude = address.Latitude,
                 Longitude = address.Longitude,
-                ListAgentFullName = $"{agent.FirstName} {agent.LastName}",
+                ListAgentFullName = "Demo Agent",
                 ListOfficeName = brokerage.Name,
                 IsBrokerageListing = true,
                 IsActive = true,
@@ -95,5 +93,66 @@ public static class DevDataSeeder
         db.Properties.AddRange(properties);
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task SeedMissingUserInfoAsync(AppDbContext db, CancellationToken cancellationToken)
+    {
+        var usersWithoutInfo = await db.Users
+            .IgnoreQueryFilters()
+            .Where(u => u.UserInfo == null)
+            .Select(u => new { u.UserId, u.Email })
+            .ToListAsync(cancellationToken);
+
+        if (usersWithoutInfo.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var user in usersWithoutInfo)
+        {
+            var (firstName, lastName) = GetNameFromEmail(user.Email);
+            db.UserInfos.Add(new UserInfo
+            {
+                UserId = user.UserId,
+                FirstName = firstName,
+                LastName = lastName,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static (string FirstName, string LastName) GetNameFromEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return ("Testy", "Tester");
+        }
+
+        var localPart = email.Split('@')[0];
+        var parts = localPart
+            .Split(['.', '_', '-'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length == 0)
+        {
+            return ("Testy", "Tester");
+        }
+
+        var firstName = Capitalize(parts[0]);
+        var lastName = parts.Length > 1 ? Capitalize(parts[1]) : "Tester";
+
+        return (firstName, lastName);
+    }
+
+    private static string Capitalize(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "Tester";
+        }
+
+        return char.ToUpperInvariant(value[0]) + value[1..].ToLowerInvariant();
     }
 }
